@@ -132,19 +132,14 @@ end
 local function detectMouseEvent()
     local im = ui_imgui
 
-    -- Check clicks in priority order
-    if im.IsMouseClicked(0) then return "click", 0 end
-    if im.IsMouseClicked(1) then return "click", 1 end
-    if im.IsMouseClicked(2) then return "click", 2 end
-
-    if im.IsMouseReleased(0) then return "mouseup", 0 end
-    if im.IsMouseReleased(1) then return "mouseup", 1 end
-    if im.IsMouseReleased(2) then return "mouseup", 2 end
-
+    -- Only process mouse events from left click
     if im.IsMouseDragging(0) then
         local delta = im.GetMouseDragDelta(0)
         return "drag", 0, delta.x, delta.y
     end
+
+    if im.IsMouseClicked(0) then return "click", 0 end
+    if im.IsMouseReleased(0) then return "mouseup", 0 end
 
     local mouseWheel = im.GetIO().MouseWheel
     if mouseWheel ~= 0 then
@@ -152,6 +147,8 @@ local function detectMouseEvent()
     end
 
     return "mousemove", nil
+
+    -- TODO: look back at middle and right click events
 end
 
 --------------------------------------------------------------------
