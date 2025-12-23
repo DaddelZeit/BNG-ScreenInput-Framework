@@ -61,7 +61,7 @@ For material configuration, refer to the game documentation or the `main.materia
 In your HTML file, add the screen input handler:
 
 ```html
-<script src="../../../../../../ui/modules/screenInput.js"></script>
+<script src="/ui/modules/screenInput.js"></script>
 <script>
   // Add your display to the Screen Input system
   window.initScreenInput(1920, 1080, "your_screen_material");
