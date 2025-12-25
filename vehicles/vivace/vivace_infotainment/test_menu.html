@@ -84,8 +84,11 @@
         bottom: 10px;
         right: 10px;
         padding: 8px 15px;
-        background: #ff2a2a;
+        background: #ff7b7b;
         cursor: pointer;
+      }
+      .back-button.hovered {
+        background: #ff0000;
       }
       .scroll-container {
         height: 300px;
@@ -291,8 +294,6 @@
     <!-- Screen Input Framework - Shared library from screenInput mod -->
     <script src="/ui/modules/screenInput.js"></script>
     <script>
-      // Initialize screenInput
-      window.initScreenInput(1024, 512, "vivace_infotainment");
 
       let currentPage = "home";
       const menuItems = document.querySelectorAll(".menu-item");
@@ -384,7 +385,11 @@
       });
 
       // Required for BeamNG vehicle controller
-      window.setup = function (config) {};
+      window.setup = function (config) {
+        window.initScreenInput( config.displayWidth, config.displayHeight, "vivace_infotainment",
+          {enableHover: true} // enables hover events
+        );
+      };
       window.updateData = function (data) {};
       window.updateMode = function (data) {};
     </script>

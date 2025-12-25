@@ -58,15 +58,25 @@ For material configuration, refer to the game documentation or the `main.materia
 
 ### HTML Display Setup
 
-In your HTML file, add the screen input handler:
+In your HTML file, add the screen input handler and initialize it inside the `setup()` callback:
 
 ```html
 <script src="/ui/modules/screenInput.js"></script>
 <script>
-  // Add your display to the Screen Input system
-  window.initScreenInput(1920, 1080, "your_screen_material");
+  window.setup = function (config) {
+    window.initScreenInput(
+      config.displayWidth,
+      config.displayHeight,
+      "your_screen_material",
+      { enableHover: true }
+    );
+  };
+  window.updateData = function (data) {};
+  window.updateMode = function (data) {};
 </script>
 ```
+
+By initializing inside `setup()`, your display receives the jbeam configuration which includes the screen dimensions. The fourth parameter is an optional setting where you can enable optional features.
 
 After calling `initScreenInput()`, you're done with BeamNG setup. Your display receives browser events and standard web development applies from here. Use vanilla JavaScript, React, Vue, whatever and build it like you would for a tablet interface.
 
@@ -311,7 +321,7 @@ Your HTML display receives standard browser events from the Screen Input system.
 - `click` - Mouse click on element
 - `mousedown` / `mouseup` - Mouse button press/release
 - `mousemove` - Mouse movement, triggers automatic mouseenter/mouseleave
-- `mouseenter` / `mouseleave` - Element hover state
+- `mouseenter` / `mouseleave` - Element hover state (with optional automatic `hovered` class)
 - `wheel` - Mouse wheel scroll
 - `drag` - Drag events with deltaX/deltaY
 
@@ -322,11 +332,32 @@ document.getElementById("myButton").addEventListener("click", function (e) {
   console.log("Clicked at:", e.clientX, e.clientY);
   // Handle button click
 });
+```
 
+**Hover States:**
+
+CSS `:hover` doesn't work with synthesized events because browsers only activate it from their internal cursor tracking. The framework provides two approaches:
+
+1. **Automatic:** Enable `enableHover: true` in your `initScreenInput` call. A `hovered` class will be added on/removed from elements as the cursor moves over them:
+
+```css
+.my-button.hovered {
+  background: #777;
+}
+```
+
+2. **Manual:** Use `mouseenter`/`mouseleave` events if you need custom logic:
+
+```javascript
 document
   .querySelector(".menu-item")
   .addEventListener("mouseenter", function (e) {
     this.classList.add("hovered");
+  });
+document
+  .querySelector(".menu-item")
+  .addEventListener("mouseleave", function (e) {
+    this.classList.remove("hovered");
   });
 ```
 
@@ -341,18 +372,33 @@ All events include standard browser properties:
 ### Adding Your Display
 
 ```javascript
-window.initScreenInput(width, height, screenId);
+window.initScreenInput(width, height, screenId, options);
 ```
 
 **Parameters:**
 
-- `width` - Screen width in pixels
-- `height` - Screen height in pixels
+- `width` - Screen width in pixels (use `config.displayWidth` from jbeam)
+- `height` - Screen height in pixels (use `config.displayHeight` from jbeam)
 - `screenId` - Unique ID for the display (optional, filters events for this screen only)
+- `options` - Configuration object (optional)
+  - `enableHover` - Enable automatic `hovered` class toggling (default: false)
 
 **When to use screenId:**
 
 If you have multiple HTML displays in the same vehicle, use `screenId` to ensure each display only receives events meant for it. The ID should match your screen material name (without the `@` symbol).
+
+**Example with options:**
+
+```javascript
+window.setup = function (config) {
+  window.initScreenInput(
+    config.displayWidth,
+    config.displayHeight,
+    "my_screen",
+    { enableHover: true }
+  );
+};
+```
 
 ### Calling Vehicle Lua Functions
 

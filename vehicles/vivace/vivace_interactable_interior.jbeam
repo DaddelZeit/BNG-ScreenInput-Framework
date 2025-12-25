@@ -56,7 +56,7 @@
           "materialName": "@vivace_gps_screen",
           "htmlPath": "local://local/vehicles/vivace/vivace_infotainment/test_menu.html",
           "displayWidth": 1024,
-          "displayHeight": 512,
+          "displayHeight": 512
         },
         "displayData": {
           "electrics": [],

@@ -17,6 +17,7 @@ class ScreenInputHandler {
     this.screenWidth = screenWidth;
     this.screenHeight = screenHeight;
     this.screenId = screenId;
+    this.enableHover = false;
     this.lastHoverElement = null;
     this.lastMouseMoveTime = 0;
     this.mouseMoveThrottle = 33; // 30fps for overhead reduction
@@ -117,6 +118,10 @@ class ScreenInputHandler {
     if (element !== this.lastHoverElement) {
       // Dispatch leave event to previous element
       if (this.lastHoverElement) {
+        // For automatic hover class toggling
+        if (this.enableHover) {
+          this.lastHoverElement.classList.remove("hovered");
+        }
         const leaveEvent = new MouseEvent("mouseleave", {
           bubbles: false,
           cancelable: true,
@@ -129,6 +134,10 @@ class ScreenInputHandler {
 
       // Dispatch enter event to new element
       if (element) {
+        // For automatic hover class toggling
+        if (this.enableHover) {
+          element.classList.add("hovered");
+        }
         const enterEvent = new MouseEvent("mouseenter", {
           bubbles: false,
           cancelable: true,
@@ -160,6 +169,11 @@ class ScreenInputHandler {
   handleMouseEnter(element, x, y) {
     if (!element) return;
 
+    // For automatic hover class toggling
+    if (this.enableHover) {
+      element.classList.add("hovered");
+    }
+
     const event = new MouseEvent("mouseenter", {
       bubbles: false,
       cancelable: true,
@@ -174,6 +188,11 @@ class ScreenInputHandler {
 
   handleMouseLeave(element, x, y) {
     if (!element) return;
+
+    // For automatic hover class toggling
+    if (this.enableHover) {
+      element.classList.remove("hovered");
+    }
 
     const event = new MouseEvent("mouseleave", {
       bubbles: false,
@@ -257,9 +276,15 @@ let handler = null;
  * @param {number} width - Screen width in pixels
  * @param {number} height - Screen height in pixels
  * @param {string} [screenId] - Unique ID for the display
+ * @param {Object} [options] - Configuration object
+ * @param {boolean} [options.enableHover] - Enable hover class feature
  */
-window.initScreenInput = function (width, height, screenId) {
+window.initScreenInput = function (width, height, screenId, options) {
   handler = new ScreenInputHandler(width, height, screenId);
+  // Enable automatic hover class if enabled
+  if (options && options.enableHover === true) {
+    handler.enableHover = true;
+  }
 };
 
 // Namespace for Lua-called functions
@@ -331,8 +356,8 @@ window.screenInput = {
   },
 
   /**
-   * Hover state handler called from Lua
-   * Called when mouse enters/leaves trigger boxes
+   * Called when cursor enters/leaves the screen trigger box
+   * Rarely needed. Coordinate events handle most use cases
    */
   onHover: function (data) {},
 
