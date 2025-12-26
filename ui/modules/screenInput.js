@@ -19,8 +19,19 @@ class ScreenInputHandler {
     this.screenId = screenId;
     this.enableHover = false;
     this.lastHoverElement = null;
+    this.hoveredElements = [];
     this.lastMouseMoveTime = 0;
-    this.mouseMoveThrottle = 33; // 30fps for overhead reduction
+    this.mouseMoveThrottle = 11; // 90fps (used to be 30, now 90 because overhead was minimal)
+  }
+
+  getDownstreamChain(element) {
+    const chain = [];
+    let current = element;
+    while (current && current !== document.body) {
+      chain.push(current);
+      current = current.parentElement;
+    }
+    return chain;
   }
 
   /**
@@ -116,12 +127,20 @@ class ScreenInputHandler {
     // Manual hover tracking needed because CSS :hover doesn't activate
     // when we synthesize events from coordinate data
     if (element !== this.lastHoverElement) {
-      // Dispatch leave event to previous element
-      if (this.lastHoverElement) {
-        // For automatic hover class toggling
-        if (this.enableHover) {
-          this.lastHoverElement.classList.remove("hovered");
+      const newChain = element ? this.getDownstreamChain(element) : [];
+      const oldChain = this.hoveredElements;
+
+      // Remove .hovered from elements no longer in the chain
+      if (this.enableHover) {
+        for (const el of oldChain) {
+          if (!newChain.includes(el)) {
+            el.classList.remove("hovered");
+          }
         }
+      }
+
+      // Dispatch leave event to previous direct element only
+      if (this.lastHoverElement && !newChain.includes(this.lastHoverElement)) {
         const leaveEvent = new MouseEvent("mouseleave", {
           bubbles: false,
           cancelable: true,
@@ -132,12 +151,17 @@ class ScreenInputHandler {
         this.lastHoverElement.dispatchEvent(leaveEvent);
       }
 
-      // Dispatch enter event to new element
-      if (element) {
-        // For automatic hover class toggling
-        if (this.enableHover) {
-          element.classList.add("hovered");
+      // Add .hovered to new elements in the chain
+      if (this.enableHover) {
+        for (const el of newChain) {
+          if (!oldChain.includes(el)) {
+            el.classList.add("hovered");
+          }
         }
+      }
+
+      // Dispatch enter event to new direct element only
+      if (element && !oldChain.includes(element)) {
         const enterEvent = new MouseEvent("mouseenter", {
           bubbles: false,
           cancelable: true,
@@ -149,6 +173,7 @@ class ScreenInputHandler {
       }
 
       this.lastHoverElement = element;
+      this.hoveredElements = newChain;
     }
 
     // Throttle mousemove events to 30fps to reduce overhead
@@ -169,9 +194,13 @@ class ScreenInputHandler {
   handleMouseEnter(element, x, y) {
     if (!element) return;
 
-    // For automatic hover class toggling
+    const newChain = this.getDownstreamChain(element);
+
+    // Add .hovered to element and all downstream elements
     if (this.enableHover) {
-      element.classList.add("hovered");
+      for (const el of newChain) {
+        el.classList.add("hovered");
+      }
     }
 
     const event = new MouseEvent("mouseenter", {
@@ -184,14 +213,16 @@ class ScreenInputHandler {
 
     element.dispatchEvent(event);
     this.lastHoverElement = element;
+    this.hoveredElements = newChain;
   }
 
   handleMouseLeave(element, x, y) {
     if (!element) return;
 
-    // For automatic hover class toggling
     if (this.enableHover) {
-      element.classList.remove("hovered");
+      for (const el of this.hoveredElements) {
+        el.classList.remove("hovered");
+      }
     }
 
     const event = new MouseEvent("mouseleave", {
@@ -204,6 +235,7 @@ class ScreenInputHandler {
 
     element.dispatchEvent(event);
     this.lastHoverElement = null;
+    this.hoveredElements = [];
   }
 
   handleDrag(element, x, y, deltaX, deltaY) {

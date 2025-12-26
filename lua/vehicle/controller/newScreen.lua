@@ -23,7 +23,7 @@ local htmlPath = nil
 local htmlTextureInstance = nil
 
 local updateTimer = 0
-local updateFPS = 60
+local updateFPS = 90 -- update at 90 fps max, was 60 fps. Increased due to low overhead
 local screenData = {electrics = {}, powertrain = {}, customModules = {}}
 
 local electricsConfig
