@@ -180,7 +180,9 @@ Built on the concepts from DaddelZeit's CCF interactive screen system.
 
 ## License
 
-This framework can be used creatively in your BeamNG mods. Attribution appreciated but not required.
+This project is licensed under the MIT License with additional attribution and compatibility requirements. Redistributions or substantial portions of the Framework must include the original copyright notice and attribution to the project's source (https://github.com/TheLeggy/BNG-ScreenInput-Framework/). Modified distributions must take reasonable steps to avoid conflicts with the official distribution and clearly identify that they are modified.
+
+See the `LICENSE` file for the full license text and exact requirements. For detailed usage and guidance, also see the `USER_MANUAL.md`.
 
 ---
 
