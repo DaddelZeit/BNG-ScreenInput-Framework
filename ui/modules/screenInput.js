@@ -930,9 +930,4 @@ window.callVehicleLua = function (functionName, args) {
   window.screenInput.callLua(functionName, args);
 };
 
-// Export for CommonJS/Node module systems
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = { ScreenInputHandler };
-}
-
 // mrow~
