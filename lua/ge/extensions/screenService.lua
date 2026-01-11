@@ -17,6 +17,7 @@ local vehicle = nil
 local referencePlanes = {}
 local lastHoveredBoxId = nil
 local triggerStates = {}
+local refPlaneCache = {}
 
 -- Screen configuration storage
 local screenConfigs = {}
@@ -238,6 +239,36 @@ local function detectTriggerInteraction(triggerId)
     end
 
     return eventData
+end
+
+--------------------------------------------------------------------
+-- ROTATION FUNCTION
+--------------------------------------------------------------------
+
+local function buildRotationMatrix(rot)
+    if not rot then
+        return MatrixF(true)
+    end
+    
+    -- Use independent axes
+    local rotX = MatrixF(true)
+    local rotY = MatrixF(true)
+    local rotZ = MatrixF(true)
+    rotX:setFromEuler(vec3(math.rad(rot.x or 0), 0, 0))
+    rotY:setFromEuler(vec3(0, math.rad(rot.y or 0), 0))
+    rotZ:setFromEuler(vec3(0, 0, math.rad(rot.z or 0)))
+    
+    local result = rotX:copy()
+    result:mul(rotY)
+    result:mul(rotZ)
+    return result
+end
+
+local function defaultRotation(rot)
+    if not rot or not rot.x or not rot.y or not rot.z then
+        return { x = 0, y = 0, z = 0 }
+    end
+    return rot
 end
 
 --------------------------------------------------------------------
@@ -586,24 +617,12 @@ local function onUpdate(dt)
     local vehRot = quat(vehicle:getRefNodeMatrix():toQuatF())
     local vehPos = vehicle:getPosition()
 
-    -- Cache rotation matrices per reference plane to avoid redundant calculations
-    local refPlaneCache = {}
+    refPlaneCache = {}
 
     -- Draw reference planes if debug enabled
     if M.drawBoxes and referencePlanes and next(referencePlanes) then
         for planeId, plane in pairs(referencePlanes) do
-            -- Use extrinsic rotations (independent axes) instead of intrinsic
-            -- Build rotation from individual axis rotations: Rx * Ry * Rz
-            local rotX = MatrixF(true)
-            local rotY = MatrixF(true)
-            local rotZ = MatrixF(true)
-            rotX:setFromEuler(vec3(math.rad(plane.rot.x or 0), 0, 0))
-            rotY:setFromEuler(vec3(0, math.rad(plane.rot.y or 0), 0))
-            rotZ:setFromEuler(vec3(0, 0, math.rad(plane.rot.z or 0)))
-
-            local refPlaneRotMat = rotX:copy()
-            refPlaneRotMat:mul(rotY)
-            refPlaneRotMat:mul(rotZ)
+            local refPlaneRotMat = buildRotationMatrix(plane.rot)
 
             local combinedVehRefRotMat = matFromRot:copy()
             combinedVehRefRotMat:mul(refPlaneRotMat)
@@ -645,18 +664,7 @@ local function onUpdate(dt)
             local cached = refPlaneCache[cacheKey]
 
             if not cached then
-                local refPlaneRotMat = MatrixF(true)
-                -- Use extrinsic rotations (independent axes)
-                local rotX = MatrixF(true)
-                local rotY = MatrixF(true)
-                local rotZ = MatrixF(true)
-                rotX:setFromEuler(vec3(math.rad(refPlane.rot.x or 0), 0, 0))
-                rotY:setFromEuler(vec3(0, math.rad(refPlane.rot.y or 0), 0))
-                rotZ:setFromEuler(vec3(0, 0, math.rad(refPlane.rot.z or 0)))
-
-                refPlaneRotMat = rotX:copy()
-                refPlaneRotMat:mul(rotY)
-                refPlaneRotMat:mul(rotZ)
+                local refPlaneRotMat = buildRotationMatrix(refPlane.rot)
 
                 local combinedVehRefRotMat = matFromRot:copy()
                 combinedVehRefRotMat:mul(refPlaneRotMat)
@@ -676,18 +684,7 @@ local function onUpdate(dt)
             local refPlanePosOffset = cached.refPlanePosOffset
 
             if v.rot then
-                local localRotMat = MatrixF(true)
-                -- Use extrinsic rotations (independent axes)
-                local rotX2 = MatrixF(true)
-                local rotY2 = MatrixF(true)
-                local rotZ2 = MatrixF(true)
-                rotX2:setFromEuler(vec3(math.rad(v.rot.x or 0), 0, 0))
-                rotY2:setFromEuler(vec3(0, math.rad(v.rot.y or 0), 0))
-                rotZ2:setFromEuler(vec3(0, 0, math.rad(v.rot.z or 0)))
-
-                localRotMat = rotX2:copy()
-                localRotMat:mul(rotY2)
-                localRotMat:mul(rotZ2)
+                local localRotMat = buildRotationMatrix(v.rot)
 
                 local combinedMat = combinedVehRefRotMat:copy()
                 combinedMat:mul(localRotMat)
@@ -699,18 +696,7 @@ local function onUpdate(dt)
             end
         else
             if v.rot then
-                local localRotMat = MatrixF(true)
-                -- Use extrinsic rotations (independent axes)
-                local rotX2 = MatrixF(true)
-                local rotY2 = MatrixF(true)
-                local rotZ2 = MatrixF(true)
-                rotX2:setFromEuler(vec3(math.rad(v.rot.x or 0), 0, 0))
-                rotY2:setFromEuler(vec3(0, math.rad(v.rot.y or 0), 0))
-                rotZ2:setFromEuler(vec3(0, 0, math.rad(v.rot.z or 0)))
-
-                localRotMat = rotX2:copy()
-                localRotMat:mul(rotY2)
-                localRotMat:mul(rotZ2)
+                local localRotMat = buildRotationMatrix(v.rot)
 
                 local combinedMat = matFromRot:copy()
                 combinedMat:mul(localRotMat)
@@ -787,18 +773,7 @@ local function onUpdate(dt)
             local cached = refPlaneCache[cacheKey]
 
             if not cached then
-                local refPlaneRotMat = MatrixF(true)
-                -- Use extrinsic rotations (independent axes)
-                local rotX = MatrixF(true)
-                local rotY = MatrixF(true)
-                local rotZ = MatrixF(true)
-                rotX:setFromEuler(vec3(math.rad(refPlane.rot.x or 0), 0, 0))
-                rotY:setFromEuler(vec3(0, math.rad(refPlane.rot.y or 0), 0))
-                rotZ:setFromEuler(vec3(0, 0, math.rad(refPlane.rot.z or 0)))
-
-                refPlaneRotMat = rotX:copy()
-                refPlaneRotMat:mul(rotY)
-                refPlaneRotMat:mul(rotZ)
+                local refPlaneRotMat = buildRotationMatrix(refPlane.rot)
 
                 local combinedVehRefRotMat = matFromRot:copy()
                 combinedVehRefRotMat:mul(refPlaneRotMat)
@@ -818,18 +793,7 @@ local function onUpdate(dt)
             local refPlanePosOffset = cached.refPlanePosOffset
 
             if v.rot then
-                local localRotMat = MatrixF(true)
-                -- Use extrinsic rotations (independent axes)
-                local rotX2 = MatrixF(true)
-                local rotY2 = MatrixF(true)
-                local rotZ2 = MatrixF(true)
-                rotX2:setFromEuler(vec3(math.rad(v.rot.x or 0), 0, 0))
-                rotY2:setFromEuler(vec3(0, math.rad(v.rot.y or 0), 0))
-                rotZ2:setFromEuler(vec3(0, 0, math.rad(v.rot.z or 0)))
-
-                localRotMat = rotX2:copy()
-                localRotMat:mul(rotY2)
-                localRotMat:mul(rotZ2)
+                local localRotMat = buildRotationMatrix(v.rot)
 
                 local combinedMat = combinedVehRefRotMat:copy()
                 combinedMat:mul(localRotMat)
@@ -841,18 +805,7 @@ local function onUpdate(dt)
             end
         else
             if v.rot then
-                local localRotMat = MatrixF(true)
-                -- Use extrinsic rotations (independent axes)
-                local rotX2 = MatrixF(true)
-                local rotY2 = MatrixF(true)
-                local rotZ2 = MatrixF(true)
-                rotX2:setFromEuler(vec3(math.rad(v.rot.x or 0), 0, 0))
-                rotY2:setFromEuler(vec3(0, math.rad(v.rot.y or 0), 0))
-                rotZ2:setFromEuler(vec3(0, 0, math.rad(v.rot.z or 0)))
-
-                localRotMat = rotX2:copy()
-                localRotMat:mul(rotY2)
-                localRotMat:mul(rotZ2)
+                local localRotMat = buildRotationMatrix(v.rot)
 
                 local combinedMat = matFromRot:copy()
                 combinedMat:mul(localRotMat)
@@ -912,15 +865,7 @@ local function parsePlaneData(planeData, filePath)
         plane.pos = vec3(planeData.pos.x, planeData.pos.y, planeData.pos.z)
     end
 
-    -- Use default rotation if missing
-    if not planeData.rot or not planeData.rot.x or not planeData.rot.y or not planeData.rot.z then
-        planeData.rot = {
-            x = 0,
-            y = 0,
-            z = 0
-        }
-    end
-
+    planeData.rot = defaultRotation(planeData.rot)
     plane.rot = {
         x = planeData.rot.x,
         y = planeData.rot.y,
@@ -1010,15 +955,7 @@ local function loadBoxes(path)
             end
 
             if box then
-                -- Use default rotation if missing
-                if not v.rot or not v.rot.x or not v.rot.y or not v.rot.z then
-                    v.rot = {
-                        x = 0,
-                        y = 0,
-                        z = 0
-                    }
-                end
-
+                v.rot = defaultRotation(v.rot)
                 box.rot = {
                     x = v.rot.x,
                     y = v.rot.y,
@@ -1032,6 +969,8 @@ local function loadBoxes(path)
 end
 
 local function loadTriggers(path)
+    triggerStates = {}  -- Clear old trigger states to prevent memory leak
+    
     if not path then
         triggers = {}
         return
@@ -1081,15 +1020,7 @@ local function loadTriggers(path)
                 refPlane = v.refPlane and tostring(v.refPlane) or nil
             }
 
-            -- Use default rotation if missing
-            if not v.rot or not v.rot.x or not v.rot.y or not v.rot.z then
-                v.rot = {
-                    x = 0,
-                    y = 0,
-                    z = 0
-                }
-            end
-
+            v.rot = defaultRotation(v.rot)
             trigger.rot = {
                 x = v.rot.x,
                 y = v.rot.y,
@@ -1113,6 +1044,13 @@ end
 local function onVehicleDestroyed(vid)
     if vehicle and vehicle:getId() == vid then
         vehicle = nil
+        screenConfigs = {}
+        boxes = {}
+        triggers = {}
+        referencePlanes = {}
+        triggerStates = {}
+        refPlaneCache = {}
+        lastHoveredBoxId = nil
     end
     registeredVehicles[vid] = nil
     if not next(registeredVehicles) then
@@ -1154,7 +1092,7 @@ local function sanitizePathComponent(str)
     return sanitized
 end
 
-local function getLicensePlate()
+local function getLicensePlateLocal()
     if not vehicle then
         return nil
     end
@@ -1165,12 +1103,12 @@ local function getLicensePlate()
     return nil
 end
 
-local function getLicensePlateAsync(callbackId)
+local function getLicensePlate(callbackId)
     if not vehicle then
         return
     end
 
-    local plate = getLicensePlate()
+    local plate = getLicensePlateLocal()
     local packedData = lpack.encode(plate)
 
     vehicle:queueLuaCommand([[
@@ -1199,7 +1137,7 @@ local function buildPersistPath(filename, scope, userId, identifier)
         return baseDir .. "/" .. filename .. ".json", baseDir
 
     elseif scope == "identifier" then
-        local id = identifier or getLicensePlate()
+        local id = identifier or getLicensePlateLocal()
         if not id then
             log("W", "No identifier or license plate found, returning to global scope")
             return baseDir .. "/" .. filename .. ".json", baseDir
@@ -1209,7 +1147,7 @@ local function buildPersistPath(filename, scope, userId, identifier)
         return dir .. "/" .. filename .. ".json", dir
 
     elseif scope == "user" then
-        local id = identifier or getLicensePlate()
+        local id = identifier or getLicensePlateLocal()
         if not id then
             log("W", "No identifier or license plate found, returning to global scope")
             return baseDir .. "/" .. filename .. ".json", baseDir
@@ -1273,8 +1211,8 @@ local function persistSave(filename, data, scope, userId, identifier)
     return true
 end
 
--- Load data
-local function persistLoad(filename, scope, userId, identifier)
+-- Internal load data function
+local function persistLoadLocal(filename, scope, userId, identifier)
     if not vehicle then
         log("E", "Cannot load data - no vehicle active")
         return nil
@@ -1290,14 +1228,14 @@ local function persistLoad(filename, scope, userId, identifier)
     return data
 end
 
--- Load data asynchronously with callback
-local function persistLoadAsync(filename, scope, userId, identifier, callbackId)
+-- Load data with callback
+local function persistLoad(filename, scope, userId, identifier, callbackId)
     if not vehicle then
         log("W", "Cannot load data - no vehicle active")
         return
     end
 
-    local data = persistLoad(filename, scope, userId, identifier)
+    local data = persistLoadLocal(filename, scope, userId, identifier)
 
     -- Send to vehicle Lua via screenInput using lpack encoding
     local packedData = lpack.encode(data)
@@ -1309,7 +1247,7 @@ local function persistLoadAsync(filename, scope, userId, identifier, callbackId)
 
 end
 
-local function persistExists(filename, scope, userId, identifier)
+local function persistExistsLocal(filename, scope, userId, identifier)
     if not vehicle then
         return false
     end
@@ -1320,12 +1258,12 @@ local function persistExists(filename, scope, userId, identifier)
     return FS:fileExists(filePath)
 end
 
-local function persistExistsAsync(filename, scope, userId, identifier, callbackId)
+local function persistExists(filename, scope, userId, identifier, callbackId)
     if not vehicle then
         return
     end
 
-    local exists = persistExists(filename, scope, userId, identifier)
+    local exists = persistExistsLocal(filename, scope, userId, identifier)
     local packedData = lpack.encode(exists)
 
     vehicle:queueLuaCommand([[
@@ -1354,14 +1292,14 @@ local function persistDelete(filename, scope, userId, identifier)
     return false
 end
 
--- List all user IDs with saved data for this file
-local function persistListUsers(filename, identifier)
+-- List all user IDs with saved data for this file (internal helper)
+local function persistListUsersLocal(filename, identifier)
     if not vehicle then
         return {}
     end
 
     local vehicleModel = vehicle.jbeam or "unknown"
-    local id = identifier or getLicensePlate()
+    local id = identifier or getLicensePlateLocal()
     if not id then
         return {}
     end
@@ -1386,12 +1324,12 @@ local function persistListUsers(filename, identifier)
     return users
 end
 
-local function persistListUsersAsync(filename, identifier, callbackId)
+local function persistListUsers(filename, identifier, callbackId)
     if not vehicle then
         return
     end
 
-    local users = persistListUsers(filename, identifier)
+    local users = persistListUsersLocal(filename, identifier)
     local packedData = lpack.encode(users)
 
     vehicle:queueLuaCommand([[
@@ -1547,7 +1485,7 @@ local function persistLoadMerged(filename, userId, identifier, callbackId)
         end
     end
 
-    local id = identifier or getLicensePlate()
+    local id = identifier or getLicensePlateLocal()
     if id then
         local identifierPath = buildPersistPath(filename, "identifier", nil, identifier)
         local identifierData = identifierPath and jsonReadFile(identifierPath) or nil
@@ -1589,8 +1527,8 @@ local function persistLoadMerged(filename, userId, identifier, callbackId)
     return result, sources
 end
 
--- Get which scope a setting came from
-local function persistGetSource(filename, key, userId, identifier)
+-- Get which scope a setting came from (internal helper)
+local function persistGetSourceLocal(filename, key, userId, identifier)
     local _, sources = persistLoadMerged(filename, userId, identifier)
     if sources then
         return sources[key]
@@ -1598,12 +1536,12 @@ local function persistGetSource(filename, key, userId, identifier)
     return nil
 end
 
-local function persistGetSourceAsync(filename, key, userId, identifier, callbackId)
+local function persistGetSource(filename, key, userId, identifier, callbackId)
     if not vehicle then
         return
     end
 
-    local source = persistGetSource(filename, key, userId, identifier)
+    local source = persistGetSourceLocal(filename, key, userId, identifier)
     local packedData = lpack.encode(source)
 
     vehicle:queueLuaCommand([[
@@ -1626,7 +1564,7 @@ end
 local function persistGetInScope(filename, key, scope, userId, identifier)
     if scope == "factory" then
         -- Check factory file first
-        local factoryData = persistLoad(filename, "factory", nil, identifier)
+        local factoryData = persistLoadLocal(filename, "factory", nil, identifier)
         if factoryData and factoryData[key] ~= nil then
             return factoryData[key]
         end
@@ -1636,7 +1574,7 @@ local function persistGetInScope(filename, key, scope, userId, identifier)
         end
         return nil
     else
-        local data = persistLoad(filename, scope, userId, identifier)
+        local data = persistLoadLocal(filename, scope, userId, identifier)
         if data and data[key] ~= nil then
             return data[key]
         end
@@ -1667,7 +1605,7 @@ local function persistFindInHierarchy(filename, key, userId, identifier)
     end
 
     -- 2. Check identifier scope (if license plate or identifier exists)
-    local id = identifier or getLicensePlate()
+    local id = identifier or getLicensePlateLocal()
     if id then
         local value = persistGetInScope(filename, key, "identifier", nil, identifier)
         if value ~= nil then
@@ -1724,20 +1662,15 @@ M.configureScreen = configureScreen -- Allow vehicle controllers to register scr
 -- Data Persistence
 M.persistSave = persistSave
 M.persistLoad = persistLoad
-M.persistLoadAsync = persistLoadAsync
 M.persistExists = persistExists
-M.persistExistsAsync = persistExistsAsync
 M.persistDelete = persistDelete
 M.persistListUsers = persistListUsers
-M.persistListUsersAsync = persistListUsersAsync
 M.getLicensePlate = getLicensePlate
-M.getLicensePlateAsync = getLicensePlateAsync
 M.persistRegisterDefaults = persistRegisterDefaults
 M.persistInitDefaults = persistInitDefaults
 M.persistResetToFactory = persistResetToFactory
 M.persistLoadMerged = persistLoadMerged
 M.persistGetSource = persistGetSource
-M.persistGetSourceAsync = persistGetSourceAsync
 M.persistGet = persistGet
 M.persistGetInScope = persistGetInScope
 M.persistFindInHierarchy = persistFindInHierarchy

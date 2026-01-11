@@ -496,7 +496,7 @@ function persistSave(filename, data, scope, userId, identifier) {
 
 /**
  * Load data from persistent storage
- * Returns data via callback since Lua->JS is async
+ * Returns data via callback since Lua->JS is asynchronous
  *
  * @param {string} filename - JSON file name to load
  * @param {function} callback - Function to call with loaded data (or null if not found)
@@ -539,7 +539,7 @@ function persistLoad(filename, callback, scope, userId, identifier) {
   }, 30000);
 
   beamng.sendEngineLua(
-    `screenService.persistLoadAsync("${filename}", "${safeScope}", ${safeUserId}, ${safeIdentifier}, "${callbackId}")`
+    `screenService.persistLoad("${filename}", "${safeScope}", ${safeUserId}, ${safeIdentifier}, "${callbackId}")`
   );
 }
 
@@ -586,7 +586,7 @@ function persistExists(filename, callback, scope, userId, identifier) {
   }, 30000);
 
   beamng.sendEngineLua(
-    `screenService.persistExistsAsync("${filename}", "${safeScope}", ${safeUserId}, ${safeIdentifier}, "${callbackId}")`
+    `screenService.persistExists("${filename}", "${safeScope}", ${safeUserId}, ${safeIdentifier}, "${callbackId}")`
   );
 }
 
@@ -651,7 +651,7 @@ function getLicensePlate(callback) {
     }
   }, 30000);
 
-  beamng.sendEngineLua(`screenService.getLicensePlateAsync("${callbackId}")`);
+  beamng.sendEngineLua(`screenService.getLicensePlate("${callbackId}");`);
 }
 
 /**
@@ -693,7 +693,7 @@ function persistListUsers(filename, callback, identifier) {
   }, 30000);
 
   beamng.sendEngineLua(
-    `screenService.persistListUsersAsync("${filename}", ${safeIdentifier}, "${callbackId}")`
+    `screenService.persistListUsers("${filename}", ${safeIdentifier}, "${callbackId}")`
   );
 }
 
@@ -879,7 +879,7 @@ function persistGetSource(filename, key, callback, userId, identifier) {
   }, 30000);
 
   beamng.sendEngineLua(
-    `screenService.persistGetSourceAsync("${filename}", "${key}", ${safeUserId}, ${safeIdentifier}, "${callbackId}")`
+    `screenService.persistGetSource("${filename}", "${key}", ${safeUserId}, ${safeIdentifier}, "${callbackId}")`
   );
 }
 
