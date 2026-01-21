@@ -1068,7 +1068,7 @@ local function onVehicleDestroyed(vid)
     end
     registeredVehicles[vid] = nil
     if not next(registeredVehicles) then
-        extensions.unload("screenService")
+        extensions.unload(M.__extensionName__)
     end
 end
 
