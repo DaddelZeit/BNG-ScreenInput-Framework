@@ -8,7 +8,7 @@ Making HTML screens in BeamNG actually usable by translating 3D raycasts into st
 
 ## The Origin Story
 
-This framework evolved from DaddelZeit's CCF interactive screen system. The original implementation was groundbreaking but had limitations - no rotation support, tedious trigger placement, and each trigger represented a single button that had to be manually positioned. Also, proprietary and with an explicit no use license.
+This framework evolved from DaddelZeit's CCF interactive screen system. The original implementation was groundbreaking but had limitations - no rotation support, tedious trigger placement, and each trigger represented a single button that had to be manually positioned. 
 
 The breakthrough came when I realized coordinate hell could be solved with reference planes. Instead of this:
 
