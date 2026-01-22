@@ -194,15 +194,13 @@ end
 local function detectTriggerInteraction(triggerId)
     local im = ui_imgui
     local state = triggerStates[triggerId] or {
-        pressed = false,
-        dragStart = nil
+        pressed = false
     }
     local eventData = nil
 
     if im.IsMouseClicked(0) then
         state.pressed = true
         state.pressTime = os.clock()
-        state.dragStart = im.GetMousePos()
         triggerStates[triggerId] = state
         eventData = {
             id = triggerId,
@@ -227,7 +225,7 @@ local function detectTriggerInteraction(triggerId)
             }
         end
 
-    elseif im.IsMouseDragging(0) and state.pressed and state.dragStart then
+    elseif im.IsMouseDragging(0) and state.pressed then
         local delta = im.GetMouseDragDelta(0)
         if math.abs(delta.x) > 5 or math.abs(delta.y) > 5 then
             eventData = {
