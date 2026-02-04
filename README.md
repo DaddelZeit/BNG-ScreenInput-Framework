@@ -79,12 +79,14 @@ In your vehicle's jbeam file:
   ["fileName"],
   ["screenInput", {"drawBoxes":false}],
   ["newScreen", { "name": "your_screen_material" }]
-]
+],
 "your_screen_material": {
-  "materialName": "@your_screen_material",
-  "htmlPath": "local://local/vehicles/yourcar/screens/infotainment.html",
-  "displayWidth": 1920,
-  "displayHeight": 1080
+  "configuration": {
+    "materialName": "@your_screen_material",
+    "htmlPath": "local://local/vehicles/yourcar/screens/infotainment.html",
+    "displayWidth": 1920,
+    "displayHeight": 1080
+  }
 }
 ```
 

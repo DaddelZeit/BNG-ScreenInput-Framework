@@ -44,10 +44,12 @@ In the same jbeam part, add the screen configuration:
 
 ```json
 "your_screen_material": {
-  "materialName": "@your_screen_material",
-  "htmlPath": "local://local/vehicles/yourcar/interactive_screen/infotainment.html",
-  "displayWidth": 1920,
-  "displayHeight": 1080
+  "configuration": {
+    "materialName": "@your_screen_material",
+    "htmlPath": "local://local/vehicles/yourcar/interactive_screen/infotainment.html",
+    "displayWidth": 1920,
+    "displayHeight": 1080
+  }
 }
 ```
 
@@ -248,23 +250,25 @@ To get vehicle data (like speed, RPM, gear, etc.) into your HTML display, you us
 
 ```json
 "your_screen_material": {
-  "materialName": "@your_screen_material",
-  "htmlPath": "local://local/vehicles/yourcar/interactive_screen//ns/infotainment.html",
-  "displayWidth": 1920,
-  "displayHeight": 1080,
-  "displayData": [
-    ["electrics", "values"],
-    ["customModules", "environmentData"],
-    ["powertrain", "deviceData"]
-  ]
+  "configuration": {
+    "materialName": "@your_screen_material",
+    "htmlPath": "local://local/vehicles/yourcar/interactive_screen/infotainment.html",
+    "displayWidth": 1920,
+    "displayHeight": 1080
+  },
+  "displayData": {
+    "electrics": ["propertyName", "..."],
+    "customModules": [["moduleName", "propertyName"]],
+    "powertrain": [["deviceName", "propertyName"]]
+  }
 }
 ```
 
-The `displayData` array specifies which data streams to send to your HTML. Common options include:
+The `displayData` object specifies which data streams to send to your HTML. Each key accepts any valid properties and/or pairs:
 
-- `["electrics", "values"]` - Electrics values
-- `["customModules", "environmentData"]` - Data from environmentData module
-- `["powertrain", "deviceData"]` - Values from the deviceData module
+- `"electrics": ["wheelspeed", "rpm", ...]` - Electrics property names
+- `"customModules": [["moduleName", "propertyName"], ...]` - Custom module data as `[module, property]` pairs
+- `"powertrain": [["deviceName", "propertyName"], ...]` - Powertrain data as `[device, property]` pairs
 
 **In your HTML, implement the callback functions:**
 
